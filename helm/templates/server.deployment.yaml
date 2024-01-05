@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: poozle-server-service
+  labels:
+    {{- toYaml .Values.server.deploymentLabels | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- toYaml .Values.server.deploymentLabels | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- toYaml .Values.server.deploymentLabels | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ include "poozle.server.image" . }}"
+          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          env:
+            - name: ENGINE_VERSION
+              value: "{{ .Values.engineVersion }}"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: poozle-secrets
+                  key: db_url
+            - name: SYNC_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: poozle-secrets
+                  key: sync_db_url
+            - name: FRONTEND_HOST
+              value: "{{ .Values.frontendHost }}"
+            - name: PUBLIC_FRONTEND_HOST
+              value: "{{ .Values.publicFrontendHost }}"
+            - name: BACKEND_HOST
+              value: "{{ .Values.backendHost }}"
+            - name: JWT_ACCESS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: poozle-secrets
+                  key: jwt_access_secret
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: poozle-secrets
+                  key: jwt_refresh_secret
+            - name: PORT
+              value: "{{ .Values.port }}"
+            - name: SUPERTOKEN_CONNECTION_URI
+              value: {{ .Values.backends.supertokens.uri }}
+            - name: MASTER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: poozle-secrets
+                  key: master_token
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

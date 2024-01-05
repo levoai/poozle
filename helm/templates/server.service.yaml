@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: poozle-server-service
+  labels:
+    {{- toYaml .Values.server.deploymentLabels | nindent 6 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- toYaml .Values.server.deploymentLabels | nindent 6 }}
