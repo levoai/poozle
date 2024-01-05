@@ -61,8 +61,6 @@ spec:
                   key: jwt_refresh_secret
             - name: PORT
               value: "{{ .Values.port }}"
-            - name: SUPERTOKEN_CONNECTION_URI
-              value: {{ .Values.backends.supertokens.uri }}
             - name: MASTER_TOKEN
               valueFrom:
                 secretKeyRef:

@@ -88,7 +88,3 @@ gateway:
   enabled: true
 
 backendURL: https://api.dev.levo.ai
-
-backends:
-  supertokens:
-    uri: http://supertokens.levoai.svc.cluster.local:3567
