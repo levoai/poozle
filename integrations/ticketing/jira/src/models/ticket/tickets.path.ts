@@ -12,6 +12,7 @@ export class TicketsPath extends BasePath {
     url: string,
     headers: AxiosHeaders,
     { queryParams, pathParams }: FetchTicketsParams,
+    config: Config,
   ) {
     const page = queryParams.cursor ? parseInt(queryParams.cursor) : 0;
     const startAt = page * queryParams.limit;
@@ -33,13 +34,18 @@ export class TicketsPath extends BasePath {
     return {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: response.data.issues.map((data: any) =>
-        convertTicket(data, pathParams?.collection_id as string | null),
+        convertTicket(data, pathParams?.collection_id as string | null, config),
       ),
       meta: getMetaParams(response.data.issues, queryParams.limit as number, page),
     };
   }
 
-  async createTickets(url: string, headers: AxiosHeaders, params: CreateTicketParams) {
+  async createTickets(
+    url: string,
+    headers: AxiosHeaders,
+    params: CreateTicketParams,
+    config: Config,
+  ) {
     try {
       const body = params.requestBody;
 
@@ -52,6 +58,7 @@ export class TicketsPath extends BasePath {
             key: Number.isNaN(Number(collectionId)) ? collectionId : undefined,
           },
           summary: body.name,
+          description: body.description,
           issuetype: {
             id: !Number.isNaN(Number(body.type)) ? body.type : undefined,
             name: Number.isNaN(Number(body.type)) ? body.type : undefined,
@@ -79,13 +86,14 @@ export class TicketsPath extends BasePath {
           ),
         ),
       };
+      config
 
       const createResponse = await axios.post(url, cleanedCreateBody, { headers });
 
       const response = await axios.get(createResponse.data.self, { headers });
 
       return {
-        data: convertTicket(response.data, params.pathParams.collection_id),
+        data: convertTicket(response.data, params.pathParams.collection_id, config),
       };
     } catch (e) {
       throw new Error(e);
@@ -104,7 +112,7 @@ export class TicketsPath extends BasePath {
     switch (method) {
       case 'GET':
         url = `${baseURL}/search?jql=project=${params.pathParams.collection_id}`;
-        return this.fetchTickets(url, headers, params);
+        return this.fetchTickets(url, headers, params, config);
 
       case 'POST':
         url = `${baseURL}/issue`;
@@ -112,7 +120,7 @@ export class TicketsPath extends BasePath {
         if (config.custom_fields) {
           createTicketParams.customFields = config.custom_fields;
         }
-        return this.createTickets(url, headers, createTicketParams);
+        return this.createTickets(url, headers, createTicketParams, config);
 
       default:
         throw new Error('Method not found');

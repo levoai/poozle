@@ -13,6 +13,9 @@ export class AuthMiddleware implements NestMiddleware {
   }
 
   use(req: Request, res: any, next: () => void) {
-    return this.supertokensMiddleware(req, res, next);
+    if (!!process.env.SUPERTOKEN_CONNECTION_URI) {
+      return this.supertokensMiddleware(req, res, next);
+    }
+    next();  
   }
 }

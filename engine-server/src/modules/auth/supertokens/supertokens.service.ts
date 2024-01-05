@@ -8,18 +8,20 @@ import * as SuperTokensConfig from 'common/configs/config';
 @Injectable()
 export class SupertokensService {
   constructor() {
-    supertokens.init({
-      appInfo: {
-        appName: 'Poozle',
-        apiDomain: process.env.BACKEND_HOST,
-        websiteDomain: process.env.FRONTEND_HOST,
-        apiBasePath: '/auth',
-        websiteBasePath: '/auth',
-      },
-      supertokens: {
-        connectionURI: process.env.SUPERTOKEN_CONNECTION_URI,
-      },
-      recipeList: SuperTokensConfig.recipeList,
-    });
+    if (process.env.SUPERTOKEN_CONNECTION_URI) {
+      supertokens.init({
+        appInfo: {
+          appName: 'Poozle',
+          apiDomain: process.env.BACKEND_HOST,
+          websiteDomain: process.env.FRONTEND_HOST,
+          apiBasePath: '/auth',
+          websiteBasePath: '/auth',
+        },
+        supertokens: {
+          connectionURI: process.env.SUPERTOKEN_CONNECTION_URI,
+        },
+        recipeList: SuperTokensConfig.recipeList,
+      });
+    }
   }
 }
