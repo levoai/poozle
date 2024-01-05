@@ -41,34 +41,6 @@ services:
       - PORT=${PORT}
       - MASTER_TOKEN=${TOKEN}
 
-  webapp:
-    build:
-      context: engine-webapp
-      dockerfile: Dockerfile
-    platform: linux/amd64
-    container_name: poozle-webapp
-    restart: unless-stopped
-    networks:
-      - poozle
-    environment:
-      - BACKEND_URL=${BACKEND_URL}
-      - NEXT_PUBLIC_BASE_HOST=${PUBLIC_FRONTEND_HOST}
-      - NEXT_PUBLIC_VERSION=${ENGINE_VERSION}
-    ports:
-      - 8000:3000
-
-  supertokens:
-    image: registry.supertokens.io/supertokens/supertokens-postgresql:5.0
-    depends_on:
-      - db
-    environment:
-      POSTGRESQL_CONNECTION_URI: ${SUPERTOKEN_DATABASE_URL}
-    ports:
-      - 3567:3567
-    networks:
-      - poozle
-    restart: unless-stopped
-
 networks:
   app_network:
     driver: bridge
