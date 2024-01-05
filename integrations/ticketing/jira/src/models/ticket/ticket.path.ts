@@ -8,7 +8,12 @@ import { FetchTicketParams, UpdateTicketParams } from './ticket.interface';
 import { convertTicket, JIRATicketBody } from './ticket.utils';
 
 export class TicketPath extends BasePath {
-  async fetchSingleTicket(url: string, headers: AxiosHeaders, params: FetchTicketParams) {
+  async fetchSingleTicket(
+    url: string,
+    headers: AxiosHeaders,
+    params: FetchTicketParams,
+    config: Config,
+  ) {
     try {
       const response = await axios({
         url,
@@ -16,14 +21,19 @@ export class TicketPath extends BasePath {
       });
 
       return {
-        data: convertTicket(response.data, params.pathParams.collection_id),
+        data: convertTicket(response.data, params.pathParams.collection_id, config),
       };
     } catch (e) {
       throw new Error(e);
     }
   }
 
-  async patchTicket(url: string, headers: AxiosHeaders, params: UpdateTicketParams) {
+  async patchTicket(
+    url: string,
+    headers: AxiosHeaders,
+    params: UpdateTicketParams,
+    config: Config,
+  ) {
     const body = params.requestBody;
 
     const createBody: JIRATicketBody = {
@@ -54,7 +64,7 @@ export class TicketPath extends BasePath {
     const response = await axios.put(url, cleanedCreateBody, { headers });
 
     return {
-      data: convertTicket(response.data, params.pathParams.collection_id),
+      data: convertTicket(response.data, params.pathParams.collection_id, config),
     };
   }
 
@@ -70,11 +80,11 @@ export class TicketPath extends BasePath {
 
     switch (method) {
       case 'GET':
-        return this.fetchSingleTicket(url, headers, params);
+        return this.fetchSingleTicket(url, headers, params, config);
 
       case 'PATCH':
-        await this.patchTicket(url, headers, params as UpdateTicketParams);
-        return this.fetchSingleTicket(url, headers, params);
+        await this.patchTicket(url, headers, params as UpdateTicketParams, config);
+        return this.fetchSingleTicket(url, headers, params, config);
 
       default:
         throw new Error('Method not found');

@@ -55,7 +55,9 @@ async function bootstrap() {
       origin: configService.get('FRONTEND_HOST').split(',') || '',
       allowedHeaders: [
         'content-type',
-        ...supertokens.getAllCORSHeaders(),
+        ...(process.env.SUPERTOKEN_CONNECTION_URI
+          ? supertokens.getAllCORSHeaders()
+          : []),
         'integrationaccountid',
         'workspaceid',
       ],

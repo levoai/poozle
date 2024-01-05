@@ -1,0 +1,66 @@
+replicaCount: 1
+maxUnavailable: 0
+
+engineVersion: 0.1.8-alpha
+
+port: 3000
+
+frontendHost: "http://localhost:3000"
+publicFrontendHost: "http://localhost:3000"
+backendHost: "http://localhost:3000"
+
+server:
+  image:
+    repository: ghcr.io/levoai/poozle/
+    name: poozle-engine-server
+    pullPolicy: IfNotPresent
+    tagOverride: ""
+  service:
+    type: NodePort
+    port: 80
+  deploymentLabels:
+    app: poozle-server
+  podLabels:
+    app: poozle-server
+  podAnnotations: {}
+  resources:
+    limits:
+      cpu: 2
+      memory: 768Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+containerPort: 80
+
+service:
+  type: NodePort
+  port: 80
+
+imagePullSecrets:
+  - name: ghcr-auth
+
+nodeLabels: {}
+
+livenessProbe:
+  initialDelaySeconds: 10
+  periodSeconds: 5
+
+deploymentLabels:
+  app: levo-ui
+
+podLabels:
+  app: levo-ui
+
+podAnnotations: {}
+
+deploymentSelectorMatchLabels:
+  app: levo-ui
+
+serviceSelectorLabels:
+  app: levo-ui
+
+gateway:
+  enabled: true
+
+backendURL: https://api.dev.levo.ai

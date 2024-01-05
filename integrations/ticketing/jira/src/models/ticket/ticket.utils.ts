@@ -3,6 +3,7 @@
 import { convertTimestampToTZFormat } from 'common';
 
 import { TicketWithRaw } from './ticket.interface';
+import { Config } from '@poozle/engine-idk';
 
 export const ticketMappings = {
   name: 'summary',
@@ -14,7 +15,11 @@ export const ticketMappings = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function convertTicket(data: any, collection_id: string | null): TicketWithRaw {
+export function convertTicket(
+  data: any,
+  collection_id: string | null,
+  config: Config,
+): TicketWithRaw {
   return {
     id: data.key,
     name: data.fields.summary,
@@ -28,7 +33,7 @@ export function convertTicket(data: any, collection_id: string | null): TicketWi
     assignees: [
       { id: data.fields.assignee?.accountId, username: data.fields.assignee?.displayName },
     ],
-    ticket_url: data.self,
+    ticket_url: `https://${config.jira_domain}/browse/${data.key}`,
     parent_id: data.fields.parent?.id,
     priority: data.fields.priority.name,
     due_date: data.fields.duedate ? convertTimestampToTZFormat(data.fields.duedate) : '',
@@ -50,16 +55,21 @@ export interface JIRATicketBody {
   fields: {
     project?: {
       id?: string;
+      key?: string;
     };
     summary?: string;
+    description?: string;
     issuetype?: {
       name?: string;
+      id?: string;
     };
     assignee?: {
       accountId?: string;
+      id?: string;
     };
     reporter?: {
       name?: string;
+      id?: string;
     };
     labels?: string[];
   };

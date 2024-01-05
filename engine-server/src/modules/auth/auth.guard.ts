@@ -12,6 +12,7 @@ import { Error as STError } from 'supertokens-node';
 import Session from 'supertokens-node/recipe/session';
 import { VerifySessionOptions } from 'supertokens-node/recipe/session';
 import { verifySession } from 'supertokens-node/recipe/session/framework/express';
+import { UserSession } from './auth.utils';
 
 async function getKey(jwt: string) {
   const decoded = decode(jwt, { complete: true });
@@ -31,7 +32,7 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ctx = context.switchToHttp();
-
+    
     let err = undefined;
     const resp = ctx.getResponse();
     const request = ctx.getRequest();
@@ -42,7 +43,18 @@ export class AuthGuard implements CanActivate {
 
     // This is to allow API calls from temporal workflows
     if (jwt && jwt === process.env.MASTER_TOKEN) {
+      const userId = request.headers?.userId || request.query?.userId;
+      if (userId) {
+        request.session = UserSession.createFromParameters(userId, jwt);
+      }
       return true;
+    }
+
+    if (!process.env.SUPERTOKEN_CONNECTION_URI) {
+      // If no supertokens integration configured only support master token authorization
+      throw new UnauthorizedException({
+        message: 'Unauthorised',
+      });
     }
 
     try {
@@ -80,6 +92,7 @@ export class AuthGuard implements CanActivate {
             });
           }
         }
+        request.session = UserSession.createFromParameters(undefined, jwt);
       }
 
       if (resp.headersSent) {
