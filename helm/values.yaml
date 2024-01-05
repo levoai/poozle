@@ -14,38 +14,14 @@ server:
     repository: ghcr.io/levoai/poozle/
     name: poozle-engine-server
     pullPolicy: IfNotPresent
-    tagOverride: 1.0.5
-  service:
-    type: NodePort
-    port: 80
-  deploymentLabels:
-    app: poozle-server
-  podLabels:
-    app: poozle-server
-  podAnnotations: {}
-  resources:
-    limits:
-      cpu: 2
-      memory: 768Mi
-    requests:
-      cpu: 100m
-      memory: 256Mi
-
-temporal:
-  image:
-    repository: temporalio
-    name: auto-setup
-    pullPolicy: IfNotPresent
     tagOverride: ""
   service:
     type: NodePort
     port: 80
-    serviceSelectorLabels:
-      app: temporal
   deploymentLabels:
-    app: temporal
+    app: poozle-server
   podLabels:
-    app: temporal
+    app: poozle-server
   podAnnotations: {}
   resources:
     limits:
