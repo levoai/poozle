@@ -20,7 +20,7 @@ jobs:
     outputs:
       version: ${{ steps.get_version.outputs.version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - id: get_version
         run: echo "VERSION=${BASE_VERSION}${{ github.run_number }}" >> $GITHUB_OUTPUT
@@ -58,7 +58,7 @@ jobs:
     needs: build-and-push-dev-image
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       # Setup gcloud CLI
       - uses: google-github-actions/setup-gcloud@v0.2.0
@@ -103,7 +103,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - uses: google-github-actions/setup-gcloud@v0.2.0
         with:
