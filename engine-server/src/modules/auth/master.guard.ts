@@ -6,14 +6,14 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import Session from 'supertokens-node/recipe/session';
+
+import { UserSession } from './auth.utils';
 
 @Injectable()
 export class MasterGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const ctx = context.switchToHttp();
 
-    const resp = ctx.getResponse();
     const request = ctx.getRequest();
 
     // this for users to call from their APIs
@@ -22,7 +22,7 @@ export class MasterGuard implements CanActivate {
 
     // This is to allow API calls from temporal workflows
     if (jwt && jwt === process.env.MASTER_TOKEN) {
-      request.session = Session.createNewSession(request, resp, 'master');
+      request.session = UserSession.createFromParameters('master', jwt);
       return true;
     }
 
