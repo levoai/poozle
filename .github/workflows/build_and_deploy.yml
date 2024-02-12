@@ -60,18 +60,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup gcloud CLI
-      - uses: google-github-actions/setup-gcloud@v0.2.0
+      - name: Azure login
+        id: login
+        uses: azure/login@v1.4.3
         with:
-          service_account_key: ${{ secrets.GKE_SA_KEY }}
-          project_id: ${{ env.GCP_PROJECT }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Get the GKE credentials so we can deploy to the cluster
-      - uses: google-github-actions/get-gke-credentials@v0.2.1
+      - name: Set AKS context
+        id: set-context
+        uses: azure/aks-set-context@v3
         with:
-          cluster_name: ${{ env.GKE_CLUSTER }}
-          location: ${{ env.GKE_ZONE }}
-          credentials: ${{ secrets.GKE_SA_KEY }}
+          resource-group: '${{ secrets.resource_group }}'
+          cluster-name: '${{ secrets.cluster_name }}'
 
       - uses: azure/setup-helm@v3
 
