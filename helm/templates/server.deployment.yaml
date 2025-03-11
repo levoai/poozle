@@ -24,6 +24,35 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- $secretMounts := list }}
+      {{- if .Values.secretMounts }}
+      {{- $secretMounts = concat $secretMounts .Values.secretMounts }}
+      {{- end }}
+      {{- if hasKey .Values "global" }}
+      {{- if hasKey .Values.global "levo" }}
+      {{- if hasKey .Values.global.levo "secretMounts" }}
+      {{- $secretMounts = concat $secretMounts .Values.global.levo.secretMounts }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- if $secretMounts }}
+      volumes:
+      {{- range $secretMounts }}
+      - name: {{ .name }}
+        secret:
+          secretName: {{ .secretName }}
+          {{- if .items }}
+          items:
+          {{- range .items }}
+            - key: {{ .key }}
+              path: {{ .path }}
+          {{- end }}
+          {{- end }}
+          {{- if .defaultMode }}
+          defaultMode: {{ .defaultMode }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -66,6 +95,53 @@ spec:
                 secretKeyRef:
                   name: poozle-secrets
                   key: master_token
+          {{- $envVars := dict }}
+          {{- if hasKey .Values "global" }}
+          {{- if hasKey .Values.global "levo" }}
+          {{- if hasKey .Values.global.levo "env" }}
+          {{- $envVars = merge $envVars .Values.global.levo.env }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if .Values.extraEnv }}
+          {{- $envVars = merge $envVars .Values.extraEnv }}
+          {{- end }}
+          {{- if $envVars }}
+            {{- range $key, $value := $envVars }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if or .Values.extraEnvVarsCM .Values.extraEnvVarsSecret }}
+          envFrom:
+            {{- if .Values.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ tpl .Values.extraEnvVarsCM . | quote }}
+            {{- end }}
+            {{- if .Values.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ tpl .Values.extraEnvVarsSecret . | quote }}
+            {{- end }}
+          {{- end }}
+          {{- $secretMounts := list }}
+          {{- if .Values.secretMounts }}
+          {{- $secretMounts = concat $secretMounts .Values.secretMounts }}
+          {{- end }}
+          {{- if hasKey .Values "global" }}
+          {{- if hasKey .Values.global "levo" }}
+          {{- if hasKey .Values.global.levo "secretMounts" }}
+          {{- $secretMounts = concat $secretMounts .Values.global.levo.secretMounts }}
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if $secretMounts }}
+          volumeMounts:
+            {{- range $secretMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              readOnly: true
+            {{- end }}
+          {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.port }}
