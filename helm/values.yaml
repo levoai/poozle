@@ -11,7 +11,8 @@ backendHost: "http://localhost:3000"
 
 server:
   image:
-    repository: ghcr.io/levoai/poozle/
+    registry: ghcr.io
+    repo: levoai/poozle
     name: poozle-engine-server
     pullPolicy: IfNotPresent
     tagOverride: ""
