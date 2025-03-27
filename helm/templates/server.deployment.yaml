@@ -11,8 +11,9 @@ spec:
       {{- toYaml .Values.server.deploymentLabels | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: "{{ include "calculateConfigChecksum" . }}"
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -35,29 +36,55 @@ spec:
       {{- end }}
       {{- end }}
       {{- end }}
-      {{- if $secretMounts }}
-      volumes:
-      {{- range $secretMounts }}
-      - name: {{ .name }}
-        secret:
-          secretName: {{ .secretName }}
-          {{- if .items }}
-          items:
-          {{- range .items }}
-            - key: {{ .key }}
-              path: {{ .path }}
-          {{- end }}
-          {{- end }}
-          {{- if .defaultMode }}
-          defaultMode: {{ .defaultMode }}
-          {{- end }}
+      {{- $configMapMounts := list }}
+      {{- if .Values.configMapMounts }}
+      {{- $configMapMounts = concat $configMapMounts .Values.configMapMounts }}
       {{- end }}
+      {{- if hasKey .Values "global" }}
+      {{- if hasKey .Values.global "levo" }}
+      {{- if hasKey .Values.global.levo "configMapMounts" }}
+      {{- $configMapMounts = concat $configMapMounts .Values.global.levo.configMapMounts }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+      {{- if or $secretMounts $configMapMounts }}
+      volumes:
+        {{- range $secretMounts }}
+        - name: {{ .name }}
+          secret:
+            secretName: {{ .secretName }}
+            {{- if .items }}
+            items:
+            {{- range .items }}
+              - key: {{ .key }}
+                path: {{ .path }}
+            {{- end }}
+            {{- end }}
+            {{- if .defaultMode }}
+            defaultMode: {{ .defaultMode }}
+            {{- end }}
+        {{- end }}
+        {{- range $configMapMounts }}
+        - name: {{ .name }}
+          configMap:
+            name: {{ .configMapName }}
+            {{- if .items }}
+            items:
+            {{- range .items }}
+              - key: {{ .key }}
+                path: {{ .path }}
+            {{- end }}
+            {{- end }}
+            {{- if .defaultMode }}
+            defaultMode: {{ .defaultMode }}
+            {{- end }}
+        {{- end }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ include "poozle.server.image" . }}"
+          image: {{ .Values.server.image.registry }}/{{ .Values.server.image.repo }}/{{ .Values.server.image.name }}:{{ default .Chart.Version .Values.server.image.tagOverride }}
           imagePullPolicy: {{ .Values.server.image.pullPolicy }}
           env:
             - name: ENGINE_VERSION
@@ -123,22 +150,22 @@ spec:
                 name: {{ tpl .Values.extraEnvVarsSecret . | quote }}
             {{- end }}
           {{- end }}
-          {{- $secretMounts := list }}
-          {{- if .Values.secretMounts }}
-          {{- $secretMounts = concat $secretMounts .Values.secretMounts }}
-          {{- end }}
-          {{- if hasKey .Values "global" }}
-          {{- if hasKey .Values.global "levo" }}
-          {{- if hasKey .Values.global.levo "secretMounts" }}
-          {{- $secretMounts = concat $secretMounts .Values.global.levo.secretMounts }}
-          {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if $secretMounts }}
+          {{- if or $secretMounts $configMapMounts }}
           volumeMounts:
             {{- range $secretMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
+              {{- if .subPath }}
+              subPath: {{ .subPath }}
+              {{- end }}
+              readOnly: true
+            {{- end }}
+            {{- range $configMapMounts }}
+            - name: {{ .name }}
+              mountPath: {{ .mountPath }}
+              {{- if .subPath }}
+              subPath: {{ .subPath }}
+              {{- end }}
               readOnly: true
             {{- end }}
           {{- end }}
