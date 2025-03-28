@@ -2,6 +2,7 @@ FROM node:18-alpine AS builder
 
 RUN apk add curl bash
 
+# Fix: Current Prisma version failed to detect the libssl/openssl version to use
 RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
 
 # Create app directory
