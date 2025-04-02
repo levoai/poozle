@@ -3,8 +3,7 @@ FROM node:18-alpine AS builder
 RUN apk add --no-cache curl bash
 
 # Fix: Current Prisma version failed to detect the libssl/openssl version to use
-RUN apk add --no-cache openssl1.1 \
-  && ln -s /usr/lib/libssl.so.1.1 /lib/libssl.so.1.1
+RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
 
 # Create app directory
 WORKDIR /app
@@ -23,8 +22,7 @@ RUN yarn build
 
 FROM node:18-alpine
 
-RUN apk add --no-cache openssl1.1 \
-  && ln -s /usr/lib/libssl.so.1.1 /lib/libssl.so.1.1
+RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package*.json ./
