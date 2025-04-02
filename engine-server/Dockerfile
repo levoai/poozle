@@ -22,6 +22,7 @@ RUN yarn build
 
 FROM node:18-alpine
 
+# Fix: Current Prisma version failed to detect the libssl/openssl version to use
 RUN ln -s /usr/lib/libssl.so.3 /lib/libssl.so.3
 
 COPY --from=builder /app/node_modules ./node_modules
