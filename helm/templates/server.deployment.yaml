@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: poozle-server-service
   labels:
+    release: {{ .Release.Name }}
     {{- toYaml .Values.server.deploymentLabels | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
@@ -17,6 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
+        release: {{ .Release.Name }}
         {{- toYaml .Values.server.deploymentLabels | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
