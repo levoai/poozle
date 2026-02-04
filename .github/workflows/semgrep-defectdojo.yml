@@ -2,7 +2,13 @@ name: SAST Semgrep to DefectDojo
 
 on:
   push:
+    branches:
+        - main
+        - semgrep-defectdojo
   pull_request:
+    branches:
+        - main
+        - semgrep-defectdojo
   schedule:
     - cron: '30 0 * * 1'
 
