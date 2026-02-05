@@ -5,10 +5,7 @@ on:
     branches:
         - main
         - semgrep-defectdojo
-  pull_request:
-    branches:
-        - main
-        - semgrep-defectdojo
+  workflow_dispatch:
   schedule:
     - cron: '30 0 * * 1'
 
