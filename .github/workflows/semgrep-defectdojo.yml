@@ -1,0 +1,58 @@
+name: SAST Semgrep to DefectDojo
+
+on:
+  push:
+    branches:
+        - main
+        - semgrep-defectdojo
+  workflow_dispatch:
+  schedule:
+    - cron: '30 0 * * 1'
+
+jobs:
+  semgrep-sast:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Semgrep
+        run: |
+          python -m pip install --upgrade pip
+          pip install semgrep
+
+      - name: Run Semgrep SAST
+        run: |
+          semgrep \
+            --config=auto \
+            --json \
+            --output semgrep-results.json || true
+
+      - name: Verify Semgrep output
+        run: |
+          if [ ! -f semgrep-results.json ]; then
+            echo "Semgrep results not found"
+            exit 1
+          fi
+
+      - name: Upload results to DefectDojo
+        run: |
+            curl -L -v \
+            -X POST "${{ secrets.DEFECTDOJO_URL }}/api/v2/import-scan/" \
+            -H "CF-Access-Client-Id: ${{ secrets.CF_ACCESS_CLIENT_ID }}" \
+            -H "CF-Access-Client-Secret: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}" \
+            -H "Authorization: Token ${{ secrets.DEFECTDOJO_API_KEY }}" \
+            -H "Accept: application/json" \
+            -F "scan_type=Semgrep JSON Report" \
+            -F "file=@semgrep-results.json" \
+            -F "product=${{ secrets.DEFECTDOJO_PRODUCT_ID }}" \
+            -F "engagement=${{ secrets.DEFECTDOJO_ENGAGEMENT_ID }}" \
+            -F "scan_date=$(date +%F)" \
+            -F "verified=true" \
+            -F "active=true"
